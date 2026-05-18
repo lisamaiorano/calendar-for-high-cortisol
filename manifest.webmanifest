@@ -1,0 +1,18 @@
+{
+  "name": "Piano di Studio Interattivo",
+  "short_name": "Piano Studio",
+  "description": "Calendario di studio con materie, eventi, feste e sincronizzazione cloud opzionale.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#172033",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

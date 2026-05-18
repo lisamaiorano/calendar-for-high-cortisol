@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#172033" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Piano Studio" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <title>Piano di Studio Interattivo</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #18202f;
+      --muted: #657084;
+      --line: #dfe5ef;
+      --accent: #2563eb;
+      --accent-dark: #1e40af;
+      --danger: #dc2626;
+      --ok: #15803d;
+      --shadow: 0 14px 32px rgba(25, 35, 55, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      padding: 18px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding: 18px;
+      background: #172033;
+      color: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar h1 {
+      font-size: clamp(1.45rem, 2.4vw, 2.35rem);
+      line-height: 1.15;
+      letter-spacing: 0;
+      margin-bottom: 6px;
+    }
+
+    .topbar p {
+      color: #d7dfec;
+      line-height: 1.45;
+      max-width: 760px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      min-height: 40px;
+      padding: 0 13px;
+      border-radius: var(--radius);
+      color: white;
+      background: var(--accent);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.16s ease, background 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      color: #172033;
+      background: #e8eef8;
+    }
+
+    .btn.secondary:hover {
+      background: #d7e2f3;
+    }
+
+    .btn.danger {
+      background: var(--danger);
+    }
+
+    .btn.icon {
+      width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-radius: 7px;
+      font-size: 1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 40px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: white;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    input[type="color"] {
+      padding: 3px;
+      height: 40px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 72px;
+      gap: 8px;
+    }
+
+    .subject-list,
+    .upcoming-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .subject-row {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcff;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .subject-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .subject-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .filter-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .filter-stack label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-stack input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+
+    .sync-box {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcff;
+    }
+
+    .sync-status {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .sync-status.ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .sync-status.warn {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .calendar-wrap {
+      display: grid;
+      gap: 18px;
+    }
+
+    .month {
+      overflow: hidden;
+    }
+
+    .month-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .month-head h2 {
+      font-size: 1.15rem;
+    }
+
+    .progress {
+      min-width: 150px;
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e6ebf4;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--ok);
+      transition: width 0.2s ease;
+    }
+
+    .weekdays,
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .weekdays {
+      background: #eef2f8;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .weekdays div {
+      padding: 10px 8px;
+      color: #4b5563;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .day {
+      position: relative;
+      min-height: 152px;
+      padding: 9px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .day:nth-child(7n) {
+      border-right: 0;
+    }
+
+    .day.outside {
+      background: #f8fafc;
+      color: #98a2b3;
+    }
+
+    .day.today {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .day.holiday {
+      background: #fff7ed;
+    }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .date-number {
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .day-tools {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .day-add {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: #edf4ff;
+      color: var(--accent-dark);
+      font-weight: 900;
+    }
+
+    .day-add:hover {
+      background: #dbeafe;
+    }
+
+    .holiday-toggle {
+      min-width: 28px;
+      height: 28px;
+      padding: 0 7px;
+      border-radius: 7px;
+      color: #9a3412;
+      background: #ffedd5;
+      font-size: 0.75rem;
+      font-weight: 900;
+    }
+
+    .holiday-toggle.active {
+      color: white;
+      background: #ea580c;
+    }
+
+    .holiday-note {
+      padding: 6px 7px;
+      border-radius: 7px;
+      color: #9a3412;
+      background: #fed7aa;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .task {
+      position: relative;
+      border-left: 5px solid var(--task-color, var(--accent));
+      background: color-mix(in srgb, var(--task-color, #2563eb) 14%, white);
+      border-radius: 7px;
+      padding: 40px 6px 6px;
+      display: block;
+      min-width: 0;
+    }
+
+    .task input[type="checkbox"] {
+      position: absolute;
+      top: 7px;
+      left: 6px;
+      width: 15px;
+      height: 15px;
+      min-height: 15px;
+    }
+
+    .task-body {
+      display: block;
+      min-width: 0;
+    }
+
+    .task-subject {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      margin-bottom: 2px;
+      overflow-wrap: break-word;
+    }
+
+    .task-text {
+      display: block;
+      font-size: 0.76rem;
+      line-height: 1.22;
+      overflow-wrap: break-word;
+    }
+
+    .task.done .task-text,
+    .task.done .task-subject {
+      text-decoration: line-through;
+      color: #667085;
+    }
+
+    .task.event {
+      border-left-color: #64748b;
+      background: #f1f5f9;
+    }
+
+    .task.event .task-subject {
+      color: #475569;
+    }
+
+    .task.event .task-done {
+      display: none;
+    }
+
+    .task-menu {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      left: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 2px;
+    }
+
+    .task-menu button {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      color: #263246;
+      background: rgba(255, 255, 255, 0.72);
+      font-weight: 800;
+      font-size: 0.66rem;
+      line-height: 1;
+    }
+
+    .task-menu button:hover {
+      background: white;
+    }
+
+    .type-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .type-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcff;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .type-option input {
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+    }
+
+    .empty-day {
+      margin-top: auto;
+      color: #9aa4b2;
+      font-size: 0.78rem;
+    }
+
+    .upcoming-item {
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--task-color, var(--accent));
+      border-radius: var(--radius);
+      background: #fbfcff;
+      display: grid;
+      gap: 3px;
+    }
+
+    .upcoming-date {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(10, 18, 32, 0.48);
+      z-index: 20;
+    }
+
+    .dialog-backdrop.open {
+      display: grid;
+    }
+
+    .dialog {
+      width: min(560px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .dialog-head,
+    .dialog-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-foot {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      justify-content: flex-end;
+    }
+
+    .dialog-body {
+      padding: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .topbar,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 10px;
+      }
+
+      .weekdays {
+        display: none;
+      }
+
+      .days {
+        grid-template-columns: 1fr;
+      }
+
+      .day,
+      .day:nth-child(7n) {
+        min-height: 130px;
+        border-right: 0;
+      }
+
+      .day.outside {
+        display: none;
+      }
+
+      .month-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .progress {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Piano di studio interattivo</h1>
+        <p>Calendario giorno per giorno per Maggio e Giugno 2026. Aggiungi materie, eventi e feste: sul telefono diventa una piccola web app installabile.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="quickAddBtn" type="button">+ Attività</button>
+        <button class="btn secondary" id="exportBtn" type="button">Esporta</button>
+        <button class="btn secondary" id="importBtn" type="button">Importa</button>
+        <button class="btn danger" id="resetBtn" type="button">Reset</button>
+        <input class="hidden" id="importFile" type="file" accept="application/json" />
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel sidebar" aria-label="Controlli del piano">
+        <section>
+          <h2 class="panel-title">Materie</h2>
+          <form id="subjectForm">
+            <input id="subjectId" type="hidden" />
+            <div class="split">
+              <div class="field">
+                <label for="subjectName">Nome materia</label>
+                <input id="subjectName" type="text" placeholder="Es. Italiano" required />
+              </div>
+              <div class="field">
+                <label for="subjectColor">Colore</label>
+                <input id="subjectColor" type="color" value="#84cc16" />
+              </div>
+            </div>
+            <button class="btn" id="saveSubjectBtn" type="submit">Salva materia</button>
+          </form>
+          <div class="subject-list" id="subjectList"></div>
+        </section>
+
+        <section>
+          <h2 class="panel-title">Filtri</h2>
+          <div class="filter-stack">
+            <select id="subjectFilter" aria-label="Filtra per materia"></select>
+            <label class="hint">
+              <input id="hideDone" type="checkbox" />
+              Nascondi attività completate
+            </label>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="panel-title">Sincronizzazione</h2>
+          <div class="sync-box">
+            <p class="sync-status" id="syncStatus">Salvataggio locale attivo.</p>
+            <button class="btn secondary" id="syncNowBtn" type="button">Sincronizza ora</button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="panel-title">Prossime attività</h2>
+          <div class="upcoming-list" id="upcomingList"></div>
+        </section>
+      </aside>
+
+      <section class="calendar-wrap" id="calendar" aria-label="Calendario Maggio e Giugno 2026"></section>
+    </section>
+  </main>
+
+  <div class="dialog-backdrop" id="taskDialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <form class="dialog" id="taskForm">
+      <div class="dialog-head">
+        <h2 id="dialogTitle">Nuova attività</h2>
+        <button class="btn icon secondary" id="closeDialogBtn" type="button" aria-label="Chiudi">x</button>
+      </div>
+      <div class="dialog-body">
+        <input id="taskId" type="hidden" />
+        <div class="type-row" role="radiogroup" aria-label="Tipo elemento">
+          <label class="type-option">
+            <input type="radio" name="taskType" value="study" checked />
+            Studio
+          </label>
+          <label class="type-option">
+            <input type="radio" name="taskType" value="event" />
+            Evento ordinario
+          </label>
+        </div>
+        <div class="field">
+          <label for="taskDate">Giorno</label>
+          <input id="taskDate" type="date" min="2026-05-01" max="2026-06-30" required />
+        </div>
+        <div class="field" id="subjectField">
+          <label for="taskSubject">Materia</label>
+          <select id="taskSubject"></select>
+        </div>
+        <div class="field">
+          <label for="taskText">Descrizione</label>
+          <textarea id="taskText" placeholder="Es. Ripasso reti, visita medica, impegno familiare..." required></textarea>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn secondary" id="cancelTaskBtn" type="button">Annulla</button>
+        <button class="btn" type="submit">Salva attività</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="dialog-backdrop" id="copyDialog" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+    <form class="dialog" id="copyForm">
+      <div class="dialog-head">
+        <h2 id="copyTitle">Copia su un altro giorno</h2>
+        <button class="btn icon secondary" id="closeCopyBtn" type="button" aria-label="Chiudi">x</button>
+      </div>
+      <div class="dialog-body">
+        <input id="copyTaskId" type="hidden" />
+        <div class="field">
+          <label for="copyDate">Giorno di destinazione</label>
+          <input id="copyDate" type="date" min="2026-05-01" max="2026-06-30" required />
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn secondary" id="cancelCopyBtn" type="button">Annulla</button>
+        <button class="btn" type="submit">Copia</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "piano-studio-interattivo-v1";
+    const MONTHS = [
+      { year: 2026, month: 4, label: "Maggio 2026" },
+      { year: 2026, month: 5, label: "Giugno 2026" }
+    ];
+    const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+
+    const defaultState = {
+      subjects: [
+        { id: crypto.randomUUID(), name: "Sistemi", color: "#86efac" },
+        { id: crypto.randomUUID(), name: "Informatica", color: "#fde68a" },
+        { id: crypto.randomUUID(), name: "Simulazioni", color: "#93c5fd" },
+        { id: crypto.randomUUID(), name: "Ripasso", color: "#fca5a5" }
+      ],
+      tasks: [],
+      holidays: [],
+      updatedAt: "1970-01-01T00:00:00.000Z"
+    };
+
+    defaultState.tasks = [
+      taskSeed("2026-05-18", "Sistemi", "Ripasso teoria + esercizi."),
+      taskSeed("2026-05-20", "Informatica", "Database, query SQL e progettazione."),
+      taskSeed("2026-05-23", "Simulazioni", "Prima simulazione completa."),
+      taskSeed("2026-06-03", "Sistemi", "Architetture di rete e sicurezza."),
+      taskSeed("2026-06-05", "Informatica", "UML, teoria e ripasso generale."),
+      taskSeed("2026-06-10", "Ripasso", "Revisione appunti e schemi."),
+      taskSeed("2026-06-15", "Simulazioni", "Simulazione completa a tempo."),
+      taskSeed("2026-06-19", "Sistemi", "Ripasso finale argomenti critici."),
+      taskSeed("2026-06-22", "Informatica", "Esercizi pratici e teoria."),
+      taskSeed("2026-06-26", "Ripasso", "Consolidamento e schemi veloci.")
+    ];
+
+    let state = loadState();
+
+    const calendar = document.querySelector("#calendar");
+    const subjectForm = document.querySelector("#subjectForm");
+    const subjectId = document.querySelector("#subjectId");
+    const subjectName = document.querySelector("#subjectName");
+    const subjectColor = document.querySelector("#subjectColor");
+    const subjectList = document.querySelector("#subjectList");
+    const subjectFilter = document.querySelector("#subjectFilter");
+    const hideDone = document.querySelector("#hideDone");
+    const taskDialog = document.querySelector("#taskDialog");
+    const taskForm = document.querySelector("#taskForm");
+    const taskId = document.querySelector("#taskId");
+    const taskDate = document.querySelector("#taskDate");
+    const taskSubject = document.querySelector("#taskSubject");
+    const taskText = document.querySelector("#taskText");
+    const subjectField = document.querySelector("#subjectField");
+    const dialogTitle = document.querySelector("#dialogTitle");
+    const upcomingList = document.querySelector("#upcomingList");
+    const importFile = document.querySelector("#importFile");
+    const copyDialog = document.querySelector("#copyDialog");
+    const copyForm = document.querySelector("#copyForm");
+    const copyTaskId = document.querySelector("#copyTaskId");
+    const copyDate = document.querySelector("#copyDate");
+    const syncStatus = document.querySelector("#syncStatus");
+    const syncNowBtn = document.querySelector("#syncNowBtn");
+    let isInitialRender = true;
+    let isApplyingRemoteState = false;
+    let cloudSync = null;
+    let cloudSaveTimer = null;
+
+    function taskSeed(date, subjectName, text) {
+      return {
+        id: crypto.randomUUID(),
+        type: "study",
+        date,
+        subjectId: defaultState.subjects.find((subject) => subject.name === subjectName).id,
+        text,
+        done: false,
+        order: nextOrderForDate(date, defaultState.tasks)
+      };
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return normalizeState(structuredClone(defaultState));
+
+      try {
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed.subjects) || !Array.isArray(parsed.tasks)) {
+          return normalizeState(structuredClone(defaultState));
+        }
+        return normalizeState(parsed);
+      } catch {
+        return normalizeState(structuredClone(defaultState));
+      }
+    }
+
+    function normalizeState(value) {
+      value.updatedAt = value.updatedAt || "1970-01-01T00:00:00.000Z";
+      value.holidays = Array.isArray(value.holidays) ? value.holidays : [];
+      value.tasks = value.tasks.map((task, index) => ({
+        id: task.id || crypto.randomUUID(),
+        type: task.type === "event" ? "event" : "study",
+        date: task.date,
+        subjectId: task.type === "event" ? "" : task.subjectId,
+        text: task.text || "",
+        done: Boolean(task.done),
+        order: Number.isFinite(task.order) ? task.order : index
+      }));
+
+      value.tasks
+        .sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order)
+        .forEach((task, index, tasks) => {
+          const sameDayBefore = tasks.filter((item, itemIndex) => itemIndex < index && item.date === task.date).length;
+          task.order = sameDayBefore;
+        });
+
+      return value;
+    }
+
+    function saveState() {
+      if (!isInitialRender && !isApplyingRemoteState) {
+        state.updatedAt = new Date().toISOString();
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (!isInitialRender && !isApplyingRemoteState) {
+        queueCloudSave();
+      }
+    }
+
+    function render() {
+      renderSubjects();
+      renderFilters();
+      renderCalendar();
+      renderUpcoming();
+      saveState();
+      isInitialRender = false;
+    }
+
+    function renderSubjects() {
+      subjectList.innerHTML = "";
+
+      state.subjects.forEach((subject) => {
+        const row = document.createElement("div");
+        row.className = "subject-row";
+        row.innerHTML = `
+          <span class="swatch" style="background:${subject.color}"></span>
+          <span class="subject-name">${escapeHtml(subject.name)}</span>
+          <span class="subject-actions">
+            <button class="btn icon secondary" type="button" title="Modifica" data-edit-subject="${subject.id}">✎</button>
+            <button class="btn icon secondary" type="button" title="Elimina" data-delete-subject="${subject.id}">×</button>
+          </span>
+        `;
+        subjectList.append(row);
+      });
+    }
+
+    function renderFilters() {
+      const currentFilter = subjectFilter.value || "all";
+      const currentTaskSubject = taskSubject.value;
+
+      subjectFilter.innerHTML = `
+        <option value="all">Tutto</option>
+        <option value="events">Solo eventi ordinari</option>
+      `;
+      taskSubject.innerHTML = "";
+
+      state.subjects.forEach((subject) => {
+        subjectFilter.append(new Option(subject.name, subject.id));
+        taskSubject.append(new Option(subject.name, subject.id));
+      });
+
+      subjectFilter.value = currentFilter === "events" || state.subjects.some((subject) => subject.id === currentFilter) ? currentFilter : "all";
+      taskSubject.value = state.subjects.some((subject) => subject.id === currentTaskSubject) ? currentTaskSubject : state.subjects[0]?.id || "";
+    }
+
+    function renderCalendar() {
+      calendar.innerHTML = "";
+      MONTHS.forEach((monthConfig) => calendar.append(buildMonth(monthConfig)));
+    }
+
+    function buildMonth({ year, month, label }) {
+      const monthEl = document.createElement("article");
+      monthEl.className = "panel month";
+
+      const monthTasks = filteredTasks().filter((task) => {
+        const taskDateValue = new Date(task.date + "T00:00:00");
+        return taskDateValue.getFullYear() === year && taskDateValue.getMonth() === month;
+      });
+      const studyTasks = monthTasks.filter((task) => task.type !== "event");
+      const total = studyTasks.length;
+      const done = studyTasks.filter((task) => task.done).length;
+      const percent = total ? Math.round((done / total) * 100) : 0;
+
+      const head = document.createElement("header");
+      head.className = "month-head";
+      head.innerHTML = `
+        <div>
+          <h2>${label}</h2>
+          <p class="hint">${done}/${total} attività completate</p>
+        </div>
+        <div class="progress" aria-label="Progresso ${label}">
+          <span style="width:${percent}%"></span>
+        </div>
+      `;
+
+      const weekdays = document.createElement("div");
+      weekdays.className = "weekdays";
+      WEEKDAYS.forEach((day) => {
+        const dayEl = document.createElement("div");
+        dayEl.textContent = day;
+        weekdays.append(dayEl);
+      });
+
+      const days = document.createElement("div");
+      days.className = "days";
+      getCalendarDays(year, month).forEach((date) => days.append(buildDay(date, month)));
+
+      monthEl.append(head, weekdays, days);
+      return monthEl;
+    }
+
+    function buildDay(date, visibleMonth) {
+      const dateKey = formatDate(date);
+      const isOutside = date.getMonth() !== visibleMonth;
+      const isHoliday = state.holidays.includes(dateKey);
+      const dayTasks = filteredTasks()
+        .filter((task) => task.date === dateKey)
+        .sort((a, b) => a.order - b.order || taskLabel(a).localeCompare(taskLabel(b)));
+
+      const day = document.createElement("div");
+      day.className = [
+        "day",
+        isOutside ? "outside" : "",
+        isHoliday ? "holiday" : "",
+        dateKey === formatDate(new Date()) ? "today" : ""
+      ].join(" ").trim();
+
+      day.innerHTML = `
+        <div class="day-header">
+          <span class="date-number">${date.getDate()}</span>
+          ${isOutside ? "" : `
+            <span class="day-tools">
+              <button class="holiday-toggle ${isHoliday ? "active" : ""}" type="button" aria-label="Contrassegna festa ${dateKey}" data-toggle-holiday="${dateKey}">F</button>
+              <button class="day-add" type="button" aria-label="Aggiungi attività al ${dateKey}" data-add-date="${dateKey}">+</button>
+            </span>
+          `}
+        </div>
+      `;
+
+      const list = document.createElement("div");
+      list.className = "task-list";
+
+      if (!isOutside && isHoliday) {
+        const holiday = document.createElement("div");
+        holiday.className = "holiday-note";
+        holiday.textContent = "Giorno di festa";
+        list.append(holiday);
+      }
+
+      dayTasks.forEach((task) => list.append(buildTask(task)));
+
+      if (!isOutside && dayTasks.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "empty-day";
+        empty.textContent = "Nessuna attività";
+        list.append(empty);
+      }
+
+      day.append(list);
+      return day;
+    }
+
+    function buildTask(task) {
+      const subject = state.subjects.find((item) => item.id === task.subjectId);
+      const isEvent = task.type === "event";
+      const color = isEvent ? "#64748b" : subject?.color || "#2563eb";
+      const taskEl = document.createElement("article");
+      taskEl.className = `task ${isEvent ? "event" : ""} ${task.done ? "done" : ""}`;
+      taskEl.style.setProperty("--task-color", color);
+      taskEl.innerHTML = `
+        <input class="task-done" type="checkbox" ${task.done ? "checked" : ""} aria-label="Completa attività" data-toggle-task="${task.id}" />
+        <span class="task-body">
+          <strong class="task-subject">${escapeHtml(isEvent ? "Evento" : subject?.name || "Materia rimossa")}</strong>
+          <span class="task-text">${escapeHtml(task.text)}</span>
+        </span>
+        <span class="task-menu">
+          <button type="button" title="Sposta su" data-move-task="${task.id}" data-direction="-1">↑</button>
+          <button type="button" title="Sposta giù" data-move-task="${task.id}" data-direction="1">↓</button>
+          <button type="button" title="Copia" data-copy-task="${task.id}">⧉</button>
+          <button type="button" title="Modifica" data-edit-task="${task.id}">✎</button>
+          <button type="button" title="Elimina" data-delete-task="${task.id}">×</button>
+        </span>
+      `;
+      return taskEl;
+    }
+
+    function renderUpcoming() {
+      const tasks = filteredTasks()
+        .filter((task) => !task.done)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 6);
+
+      upcomingList.innerHTML = "";
+      if (tasks.length === 0) {
+        upcomingList.innerHTML = `<p class="hint">Nessuna attività in sospeso.</p>`;
+        return;
+      }
+
+      tasks.forEach((task) => {
+        const subject = state.subjects.find((item) => item.id === task.subjectId);
+        const isEvent = task.type === "event";
+        const item = document.createElement("div");
+        item.className = "upcoming-item";
+        item.style.setProperty("--task-color", isEvent ? "#64748b" : subject?.color || "#2563eb");
+        item.innerHTML = `
+          <span class="upcoming-date">${formatItalianDate(task.date)}</span>
+          <strong>${escapeHtml(isEvent ? "Evento" : subject?.name || "Materia rimossa")}</strong>
+          <span class="hint">${escapeHtml(task.text)}</span>
+        `;
+        upcomingList.append(item);
+      });
+    }
+
+    function filteredTasks() {
+      return state.tasks.filter((task) => {
+        const currentFilter = subjectFilter.value;
+        const subjectMatch =
+          currentFilter === "all" ||
+          !currentFilter ||
+          (currentFilter === "events" && task.type === "event") ||
+          (task.type !== "event" && task.subjectId === currentFilter);
+        const doneMatch = task.type === "event" || !hideDone.checked || !task.done;
+        return subjectMatch && doneMatch;
+      });
+    }
+
+    function getCalendarDays(year, month) {
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const startOffset = (first.getDay() + 6) % 7;
+      const endOffset = 6 - ((last.getDay() + 6) % 7);
+      const start = new Date(year, month, 1 - startOffset);
+      const end = new Date(year, month + 1, endOffset);
+      const days = [];
+
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        days.push(new Date(date));
+      }
+
+      return days;
+    }
+
+    function openTaskDialog(date = "2026-05-01", task = null) {
+      dialogTitle.textContent = task ? "Modifica attività" : "Nuova attività";
+      taskId.value = task?.id || "";
+      taskDate.value = task?.date || date;
+      taskSubject.value = task?.subjectId || state.subjects[0]?.id || "";
+      taskText.value = task?.text || "";
+      setTaskType(task?.type || "study");
+      taskDialog.classList.add("open");
+      taskText.focus();
+    }
+
+    function closeTaskDialog() {
+      taskDialog.classList.remove("open");
+      taskForm.reset();
+      taskId.value = "";
+      setTaskType("study");
+    }
+
+    function setTaskType(type) {
+      const normalizedType = type === "event" ? "event" : "study";
+      const input = taskForm.querySelector(`input[name="taskType"][value="${normalizedType}"]`);
+      if (input) input.checked = true;
+      subjectField.classList.toggle("hidden", normalizedType === "event");
+      taskSubject.required = normalizedType !== "event";
+    }
+
+    function saveTask(event) {
+      event.preventDefault();
+      const type = new FormData(taskForm).get("taskType") === "event" ? "event" : "study";
+      if (type === "study" && !state.subjects.length) {
+        alert("Aggiungi almeno una materia prima di creare attività.");
+        return;
+      }
+
+      const existingTask = state.tasks.find((task) => task.id === taskId.value);
+      const payload = {
+        id: taskId.value || crypto.randomUUID(),
+        type,
+        date: taskDate.value,
+        subjectId: type === "event" ? "" : taskSubject.value,
+        text: taskText.value.trim(),
+        done: type === "event" ? false : existingTask?.done || false,
+        order: existingTask && existingTask.date === taskDate.value ? existingTask.order : nextOrderForDate(taskDate.value)
+      };
+
+      if (!payload.text) return;
+
+      const existingIndex = state.tasks.findIndex((task) => task.id === payload.id);
+      if (existingIndex >= 0) {
+        state.tasks[existingIndex] = payload;
+      } else {
+        state.tasks.push(payload);
+      }
+
+      normalizeOrders();
+      closeTaskDialog();
+      render();
+    }
+
+    function saveSubject(event) {
+      event.preventDefault();
+      const name = subjectName.value.trim();
+      if (!name) return;
+
+      if (subjectId.value) {
+        const subject = state.subjects.find((item) => item.id === subjectId.value);
+        if (subject) {
+          subject.name = name;
+          subject.color = subjectColor.value;
+        }
+      } else {
+        state.subjects.push({
+          id: crypto.randomUUID(),
+          name,
+          color: subjectColor.value
+        });
+      }
+
+      subjectForm.reset();
+      subjectId.value = "";
+      subjectColor.value = "#84cc16";
+      document.querySelector("#saveSubjectBtn").textContent = "Salva materia";
+      render();
+    }
+
+    function editSubject(id) {
+      const subject = state.subjects.find((item) => item.id === id);
+      if (!subject) return;
+      subjectId.value = subject.id;
+      subjectName.value = subject.name;
+      subjectColor.value = subject.color;
+      document.querySelector("#saveSubjectBtn").textContent = "Aggiorna materia";
+      subjectName.focus();
+    }
+
+    function deleteSubject(id) {
+      const hasTasks = state.tasks.some((task) => task.subjectId === id);
+      const message = hasTasks
+        ? "Questa materia ha attività collegate. Vuoi eliminare anche quelle?"
+        : "Vuoi eliminare questa materia?";
+      if (!confirm(message)) return;
+
+      state.subjects = state.subjects.filter((subject) => subject.id !== id);
+      state.tasks = state.tasks.filter((task) => task.subjectId !== id);
+      render();
+    }
+
+    function toggleTask(id) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+      task.done = !task.done;
+      render();
+    }
+
+    function editTask(id) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+      openTaskDialog(task.date, task);
+    }
+
+    function deleteTask(id) {
+      if (!confirm("Vuoi eliminare questa attività?")) return;
+      state.tasks = state.tasks.filter((task) => task.id !== id);
+      normalizeOrders();
+      render();
+    }
+
+    function moveTask(id, direction) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+
+      const dayTasks = state.tasks
+        .filter((item) => item.date === task.date)
+        .sort((a, b) => a.order - b.order);
+      const index = dayTasks.findIndex((item) => item.id === id);
+      const nextIndex = index + Number(direction);
+
+      if (nextIndex < 0 || nextIndex >= dayTasks.length) return;
+
+      const target = dayTasks[nextIndex];
+      const oldOrder = task.order;
+      task.order = target.order;
+      target.order = oldOrder;
+      normalizeOrders();
+      render();
+    }
+
+    function openCopyDialog(id) {
+      const task = state.tasks.find((item) => item.id === id);
+      if (!task) return;
+      copyTaskId.value = id;
+      copyDate.value = task.date;
+      copyDialog.classList.add("open");
+      copyDate.focus();
+    }
+
+    function closeCopyDialog() {
+      copyDialog.classList.remove("open");
+      copyForm.reset();
+      copyTaskId.value = "";
+    }
+
+    function copyTask(event) {
+      event.preventDefault();
+      const task = state.tasks.find((item) => item.id === copyTaskId.value);
+      if (!task) return;
+
+      state.tasks.push({
+        ...task,
+        id: crypto.randomUUID(),
+        date: copyDate.value,
+        done: false,
+        order: nextOrderForDate(copyDate.value)
+      });
+
+      closeCopyDialog();
+      render();
+    }
+
+    function toggleHoliday(date) {
+      if (state.holidays.includes(date)) {
+        state.holidays = state.holidays.filter((item) => item !== date);
+      } else {
+        state.holidays.push(date);
+      }
+      render();
+    }
+
+    function nextOrderForDate(date, tasks = state?.tasks || []) {
+      const sameDayTasks = tasks.filter((task) => task.date === date);
+      return sameDayTasks.length ? Math.max(...sameDayTasks.map((task) => task.order || 0)) + 1 : 0;
+    }
+
+    function normalizeOrders() {
+      const dates = [...new Set(state.tasks.map((task) => task.date))];
+      dates.forEach((date) => {
+        state.tasks
+          .filter((task) => task.date === date)
+          .sort((a, b) => a.order - b.order || taskLabel(a).localeCompare(taskLabel(b)))
+          .forEach((task, index) => {
+            task.order = index;
+          });
+      });
+    }
+
+    async function setupCloudSync() {
+      try {
+        const { firebaseConfig, syncDocumentPath } = await import("./firebase-config.js");
+        const enabled = firebaseConfig && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("INSERISCI");
+        if (!enabled) {
+          setSyncStatus("Cloud non configurato: salvataggio solo su questo dispositivo.", "warn");
+          return;
+        }
+
+        setSyncStatus("Connessione al cloud...", "");
+        const appModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+        const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+        const firestoreModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+        const app = appModule.initializeApp(firebaseConfig);
+        const auth = authModule.getAuth(app);
+        await authModule.signInAnonymously(auth);
+
+        const db = firestoreModule.getFirestore(app);
+        const docRef = firestoreModule.doc(db, syncDocumentPath || "studyPlans/default");
+
+        cloudSync = {
+          async load() {
+            const snapshot = await firestoreModule.getDoc(docRef);
+            return snapshot.exists() ? snapshot.data().state : null;
+          },
+          async save(nextState) {
+            await firestoreModule.setDoc(docRef, {
+              state: nextState,
+              updatedAt: nextState.updatedAt
+            }, { merge: true });
+          }
+        };
+
+        await pullCloudState();
+        setSyncStatus("Cloud attivo: modifiche sincronizzate.", "ok");
+      } catch (error) {
+        console.warn("Cloud sync non disponibile", error);
+        setSyncStatus("Cloud non raggiungibile: continuo con salvataggio locale.", "warn");
+      }
+    }
+
+    async function pullCloudState() {
+      if (!cloudSync) return;
+      const remoteState = await cloudSync.load();
+      if (!remoteState) {
+        await cloudSync.save(state);
+        return;
+      }
+
+      const normalizedRemote = normalizeState(remoteState);
+      const remoteTime = new Date(normalizedRemote.updatedAt).getTime();
+      const localTime = new Date(state.updatedAt).getTime();
+
+      if (remoteTime > localTime) {
+        isApplyingRemoteState = true;
+        state = normalizedRemote;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+        isApplyingRemoteState = false;
+      } else if (localTime > remoteTime) {
+        await cloudSync.save(state);
+      }
+    }
+
+    function queueCloudSave() {
+      if (!cloudSync) return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(async () => {
+        try {
+          await cloudSync.save(state);
+          setSyncStatus("Cloud aggiornato.", "ok");
+        } catch (error) {
+          console.warn("Salvataggio cloud fallito", error);
+          setSyncStatus("Cloud non aggiornato: salvo comunque sul dispositivo.", "warn");
+        }
+      }, 600);
+    }
+
+    async function syncNow() {
+      if (!cloudSync) {
+        setSyncStatus("Configura Firebase per sincronizzare tra dispositivi.", "warn");
+        return;
+      }
+
+      try {
+        setSyncStatus("Sincronizzazione...", "");
+        await pullCloudState();
+        await cloudSync.save(state);
+        setSyncStatus("Sincronizzato.", "ok");
+      } catch (error) {
+        console.warn("Sincronizzazione fallita", error);
+        setSyncStatus("Sincronizzazione non riuscita.", "warn");
+      }
+    }
+
+    function setSyncStatus(message, kind = "") {
+      syncStatus.textContent = message;
+      syncStatus.className = `sync-status ${kind}`.trim();
+    }
+
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.register("./service-worker.js").catch((error) => {
+        console.warn("Service worker non registrato", error);
+      });
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "piano-studio.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed.subjects) || !Array.isArray(parsed.tasks)) {
+            throw new Error("Formato non valido");
+          }
+          state = normalizeState(parsed);
+          render();
+        } catch {
+          alert("Il file importato non sembra un piano valido.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetData() {
+      if (!confirm("Vuoi tornare ai dati iniziali? Le modifiche salvate verranno cancellate.")) return;
+      state = normalizeState(structuredClone(defaultState));
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    }
+
+    function subjectNameFor(id) {
+      return state.subjects.find((subject) => subject.id === id)?.name || "";
+    }
+
+    function taskLabel(task) {
+      return task.type === "event" ? `Evento ${task.text}` : `${subjectNameFor(task.subjectId)} ${task.text}`;
+    }
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatItalianDate(value) {
+      return new Intl.DateTimeFormat("it-IT", {
+        weekday: "short",
+        day: "numeric",
+        month: "long"
+      }).format(new Date(value + "T00:00:00"));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.querySelector("#quickAddBtn").addEventListener("click", () => openTaskDialog(formatDate(new Date(2026, 4, 1))));
+    document.querySelector("#closeDialogBtn").addEventListener("click", closeTaskDialog);
+    document.querySelector("#cancelTaskBtn").addEventListener("click", closeTaskDialog);
+    document.querySelector("#closeCopyBtn").addEventListener("click", closeCopyDialog);
+    document.querySelector("#cancelCopyBtn").addEventListener("click", closeCopyDialog);
+    document.querySelector("#exportBtn").addEventListener("click", exportData);
+    document.querySelector("#importBtn").addEventListener("click", () => importFile.click());
+    document.querySelector("#resetBtn").addEventListener("click", resetData);
+    syncNowBtn.addEventListener("click", syncNow);
+
+    importFile.addEventListener("change", (event) => {
+      importData(event.target.files[0]);
+      importFile.value = "";
+    });
+
+    subjectForm.addEventListener("submit", saveSubject);
+    taskForm.addEventListener("submit", saveTask);
+    copyForm.addEventListener("submit", copyTask);
+    subjectFilter.addEventListener("change", render);
+    hideDone.addEventListener("change", render);
+    taskForm.querySelectorAll("input[name='taskType']").forEach((input) => {
+      input.addEventListener("change", () => setTaskType(input.value));
+    });
+
+    taskDialog.addEventListener("click", (event) => {
+      if (event.target === taskDialog) closeTaskDialog();
+    });
+
+    copyDialog.addEventListener("click", (event) => {
+      if (event.target === copyDialog) closeCopyDialog();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && taskDialog.classList.contains("open")) {
+        closeTaskDialog();
+      }
+      if (event.key === "Escape" && copyDialog.classList.contains("open")) {
+        closeCopyDialog();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      const addDate = event.target.closest("[data-add-date]")?.dataset.addDate;
+      const holidayDate = event.target.closest("[data-toggle-holiday]")?.dataset.toggleHoliday;
+      const editTaskId = event.target.closest("[data-edit-task]")?.dataset.editTask;
+      const deleteTaskId = event.target.closest("[data-delete-task]")?.dataset.deleteTask;
+      const toggleTaskId = event.target.closest("[data-toggle-task]")?.dataset.toggleTask;
+      const copyTaskId = event.target.closest("[data-copy-task]")?.dataset.copyTask;
+      const moveButton = event.target.closest("[data-move-task]");
+      const editSubjectId = event.target.closest("[data-edit-subject]")?.dataset.editSubject;
+      const deleteSubjectId = event.target.closest("[data-delete-subject]")?.dataset.deleteSubject;
+
+      if (addDate) openTaskDialog(addDate);
+      if (holidayDate) toggleHoliday(holidayDate);
+      if (editTaskId) editTask(editTaskId);
+      if (deleteTaskId) deleteTask(deleteTaskId);
+      if (toggleTaskId) toggleTask(toggleTaskId);
+      if (copyTaskId) openCopyDialog(copyTaskId);
+      if (moveButton) moveTask(moveButton.dataset.moveTask, moveButton.dataset.direction);
+      if (editSubjectId) editSubject(editSubjectId);
+      if (deleteSubjectId) deleteSubject(deleteSubjectId);
+    });
+
+    render();
+    registerServiceWorker();
+    setupCloudSync();
+  </script>
+</body>
+</html>
