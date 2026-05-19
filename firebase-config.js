@@ -1,10 +1,11 @@
 export const firebaseConfig = {
-  apiKey: "INSERISCI_API_KEY",
-  authDomain: "INSERISCI_PROJECT_ID.firebaseapp.com",
-  projectId: "INSERISCI_PROJECT_ID",
-  storageBucket: "INSERISCI_PROJECT_ID.appspot.com",
-  messagingSenderId: "INSERISCI_MESSAGING_SENDER_ID",
-  appId: "INSERISCI_APP_ID"
+  apiKey: "AIzaSyCutD2_yJls11JO9UWYFtl-IYTF0Sv9vkI",
+  authDomain: "calendar-high-cortisol.firebaseapp.com",
+  projectId: "calendar-high-cortisol",
+  storageBucket: "calendar-high-cortisol.firebasestorage.app",
+  messagingSenderId: "159748482855",
+  appId: "1:159748482855:web:e3a4a573ae037c34bcab02",
+  measurementId: "G-0LHRBF3HKC"
 };
 
 export const syncDocumentPath = "studyPlans/main";
